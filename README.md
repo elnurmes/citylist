@@ -12,7 +12,7 @@ cd /frontend
 npm install
 npm start
 
-in /backend/ directory run spring boot aplication using gradle
+in /backend/ directory run spring boot aplication using gradle (Java version 11)
 cd /backend/
 
 Gradle -> Tasks -> Build -> build 
