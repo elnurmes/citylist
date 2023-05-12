@@ -1,0 +1,70 @@
+apply plugin: 'checkstyle'
+apply plugin: 'pmd'
+apply plugin: 'info.solidsoft.pitest'
+
+checkstyle {
+    configFile = rootProject.file('codequality/checkstyle.xml')
+    sourceSets = [project.sourceSets.main]
+    checkstyleMain.exclude '**/CitylistApplication.*/**'
+}
+
+pmd {
+    toolVersion = "6.26.0"
+    sourceSets = [project.sourceSets.main]
+    ruleSets = []
+    ruleSetFiles = files('codequality/pmd.xml')
+}
+
+task checkstyleHtml {
+    group = "Verification"
+    description "Create a human readable Checkstyle report"
+    doLast {
+        ant.xslt(in: checkstyleMain.reports.xml.destination,
+                 style: file('codequality/checkstyle-noframes-sorted.xsl'),
+                 out: new File(checkstyleMain.reports.xml.destination.parent, 'main.html'))
+    }
+}
+checkstyleMain.finalizedBy checkstyleHtml
+
+pitest {
+    reportDir = file("$buildDir/reports/pit")
+    // Don't use projectName, which is surgically altered in above code on Jenkins
+    targetClasses = ["com.hometask.citylist.*"]
+    // This puts the pitest results into a dated subfolder so you can keep multiple result sets for comparison
+    timestampedReports = false
+    // Cache results and only recheck coverage where there's a change
+    enableDefaultIncrementalAnalysis = true
+    // Helps prevent inaccurate coverage counts
+    detectInlinedCode = true
+    // Usually caused by mis-configuration, causing it to not see the classes under test
+    failWhenNoMutations = true
+    // XML needed for QMA
+    outputFormats = ['XML', 'HTML']
+    excludedClasses = [
+            // inherited from blueprint
+            "*.server.*",
+            "*.CitylistApplication",
+            // not significant code to test
+            "*.model.*",
+            "*.config.*",
+            "*.exception.*",
+            // final util class with a static method
+            "*.ResourceUtils",
+            "*.security.*",
+            "*.controller.*",
+            "*.repository.*",
+            "*.service.ValidationService",
+            "*.error.*"
+    ]
+    // "Line coverage threshold below which the build will fail. "
+    coverageThreshold = 50 // 70 - 80
+    // "Mutation score threshold below which the build will fail. "
+    mutationThreshold = 50 // 70 - 80
+    avoidCallsTo = ["org.slf4j"]
+    verbose = false
+    jvmArgs = ['-Xmx2048m']
+    // Needed for JUnit 5
+    junit5PluginVersion = '0.15'
+    testPlugin = "junit5"
+}
+test.finalizedBy(project.tasks.pitest)
