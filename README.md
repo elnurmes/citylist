@@ -15,6 +15,11 @@ npm start
 in /backend/ directory run spring boot aplication using gradle (Java version 11)
 cd /backend/
 
+Create database base citylist (check ports and password in application properties).
+Test user with edit role is:
+email: test@test.com
+password: farfar
+
 Gradle -> Tasks -> Build -> build 
 Gradle -> Tasks -> applicatio -> bootrun
 
